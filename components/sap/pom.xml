@@ -28,7 +28,6 @@
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.wso2.carbon.transports.sap</artifactId>
-    <version>4.7.33-SNAPSHOT</version>
     <packaging>${packaging.type}</packaging>
     <name>WSO2 Carbon - SAP transport</name>
     <description>WSO2 Carbon - SAP Adapter</description>
