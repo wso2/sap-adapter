@@ -59,7 +59,7 @@
                         <configuration>
                             <bundles>
                                 <bundleDef>
-                                    org.wso2.carbon.mediation:org.wso2.carbon.transports.sap:${sap.adapter.version}
+                                    org.wso2.carbon.mediation:org.wso2.carbon.transports.sap:${project.version}
                                 </bundleDef>
                             </bundles>
                             <id>org.wso2.carbon.transports.sap</id>
