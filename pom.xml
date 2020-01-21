@@ -16,9 +16,7 @@
  ~ specific language governing permissions and limitations
  ~ under the License.
  -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.wso2</groupId>
         <artifactId>wso2</artifactId>
@@ -28,7 +26,7 @@
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>sap-adapter</artifactId>
-    <version>4.7.33-SNAPSHOT</version>
+    <version>4.7.33</version>
     <packaging>pom</packaging>
 
     <scm>
@@ -36,7 +34,7 @@
         <developerConnection>scm:git:https://github.com/wso2/sap-adapter.git
         </developerConnection>
         <connection>scm:git:https://github.com/wso2/sap-adapter.git</connection>
-        <tag>HEAD</tag>
+        <tag>v4.7.33</tag>
     </scm>
 
     <modules>
