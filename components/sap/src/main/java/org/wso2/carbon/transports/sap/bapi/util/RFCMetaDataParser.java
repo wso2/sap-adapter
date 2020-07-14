@@ -152,7 +152,7 @@ public class RFCMetaDataParser {
 
 					processStructure(childElement, jcoStructureInner, structureName);
 				} else if (qname.equals("table")) {
-					String name = childElement.getAttributeValue(new QName("name"));
+					String name = childElement.getAttributeValue(RFCConstants.NAME_Q);
 					JCoTable jcoTableInner = jcoStrcture.getTable(name);
 					processTable(childElement, jcoTableInner);
 				} else {
@@ -199,7 +199,7 @@ public class RFCMetaDataParser {
 
 					processStructure(childElement, jcoStructureInner, structureName);
 				} else if (qname.equals("table")) {
-					String tableName = childElement.getAttributeValue(new QName("name"));
+					String tableName = childElement.getAttributeValue(RFCConstants.NAME_Q);
 					JCoTable jcoTableInner = jcoStrcture.getTable(tableName);
 
 					if (jcoTableInner == null) {
@@ -219,13 +219,14 @@ public class RFCMetaDataParser {
 		}
 	}
 
-	private static void processTable(OMElement element, JCoTable jconTable) {
+	private static void processTable(OMElement element, JCoTable jconTable) 
+			throws AxisFault{
 		JCoTable inputTable = jconTable;
 		Iterator itr = element.getChildElements();
 		while (itr.hasNext()) {
 			OMElement childElement = (OMElement) itr.next();
 			String qname = childElement.getQName().toString();
-			String id = childElement.getAttributeValue(new QName("id"));
+			String id = childElement.getAttributeValue(RFCConstants.ID_Q);
 			if (qname.equals("row")) {
 				processRow(childElement, inputTable, id);
 			}
@@ -351,7 +352,7 @@ public class RFCMetaDataParser {
             if (qname != null && qname.equals("field")) {
                 processField(childElement, table);
             } else if (qname != null && qname.equals("structure")) {
-				String structureName = childElement.getAttributeValue(new QName("name"));
+				String structureName = childElement.getAttributeValue(RFCConstants.NAME_Q);
 				JCoStructure jcoStrctureInner = table.getStructure(structureName);
 				
 				if (jcoStrctureInner != null) {
