@@ -26,7 +26,7 @@
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>sap-adapter</artifactId>
-    <version>4.7.34-SNAPSHOT</version>
+    <version>4.7.34</version>
     <packaging>pom</packaging>
 
     <scm>
@@ -34,7 +34,7 @@
         <developerConnection>scm:git:https://github.com/wso2/sap-adapter.git
         </developerConnection>
         <connection>scm:git:https://github.com/wso2/sap-adapter.git</connection>
-        <tag>HEAD</tag>
+        <tag>v4.7.34</tag>
     </scm>
 
     <modules>
