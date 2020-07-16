@@ -26,19 +26,19 @@ import org.apache.commons.logging.LogFactory;
 
 import java.util.Iterator;
 
-/** This will contain the required methods that can be use to parser a
+/**
+ * This will contain the required methods that can be use to parser a
  * meta data description of a BAPI/RFC call.
  * So the BNF grammer for the meta data would looks like :
- *  bapirfc   -> import | tables | both
- *  import    -> structure | field | tables | all
- *  structure -> 1 or more fields
- *  tables    -> 1 or more table
- *  table     -> row
- *  row       -> 1 or more fields
- *  field     -> name and value
- *
+ * bapirfc   -> import | tables | both
+ * import    -> structure | field | tables | all
+ * structure -> 1 or more fields
+ * tables    -> 1 or more table
+ * table     -> row
+ * row       -> 1 or more fields
+ * field     -> name and value
+ * <p>
  * See resources folder for sample meta data description files
- *
  */
 public class RFCMetaDataParser {
 
@@ -46,14 +46,15 @@ public class RFCMetaDataParser {
 
     /**
      * Start processing of the document
+     *
      * @param document the document node
      * @param function the RFC function to execute
      * @throws AxisFault throws in case of an error
      */
-    public static void processMetaDataDocument(OMElement document, JCoFunction function) throws AxisFault{
+    public static void processMetaDataDocument(OMElement document, JCoFunction function) throws AxisFault {
         Iterator itr = document.getChildElements();
-        while(itr.hasNext()){
-            OMElement childElement = (OMElement)itr.next();
+        while (itr.hasNext()) {
+            OMElement childElement = (OMElement) itr.next();
             processElement(childElement, function);
         }
         if (log.isDebugEnabled()) {
@@ -82,35 +83,35 @@ public class RFCMetaDataParser {
         }
     }
 
-    private static void processElement(OMElement element, JCoFunction function) throws AxisFault{
+    private static void processElement(OMElement element, JCoFunction function) throws AxisFault {
         String qname = element.getQName().toString();
-        if(qname != null){
-            if(qname.equals("import")){
+        if (qname != null) {
+            if (qname.equals("import")) {
                 processImport(element, function);
-            }else if(qname.equals("tables")){
+            } else if (qname.equals("tables")) {
                 processTables(element, function);
-            }else {
+            } else {
                 log.warn("Unknown meta data type tag :" + qname + " detected. " +
-                        "This meta data element will be discarded!");
+                         "This meta data element will be discarded!");
             }
         }
     }
 
-    private static void processImport(OMElement element, JCoFunction function) throws AxisFault{
+    private static void processImport(OMElement element, JCoFunction function) throws AxisFault {
         Iterator itr = element.getChildElements();
-        while (itr.hasNext()){
+        while (itr.hasNext()) {
             OMElement childElement = (OMElement) itr.next();
             String qname = childElement.getQName().toString();
             String name = childElement.getAttributeValue(RFCConstants.NAME_Q);
-            if(qname.equals("structure")){
+            if (qname.equals("structure")) {
                 processStructure(childElement, function, name);
-            }else if(qname.equals("field")){
+            } else if (qname.equals("field")) {
                 processField(childElement, function, name);
-            }else if(qname.equals("tables")){
+            } else if (qname.equals("tables")) {
                 processTablesParameter(childElement, function);
-            }else{
+            } else {
                 log.warn("Unknown meta data type tag :" + qname + " detected. " +
-                        "This meta data element will be discarded!");
+                         "This meta data element will be discarded!");
             }
         }
     }
@@ -137,106 +138,106 @@ public class RFCMetaDataParser {
                             break;
                         }
                     }
-                    if(!isRecordFound){
-                        throw new AxisFault("Invalid configuration! The field : "+ fieldName + "" +
-                                " did not find the the strcture : " + strcutName);
+                    if (!isRecordFound) {
+                        throw new AxisFault("Invalid configuration! The field : " + fieldName + "" +
+                                            " did not find the the strcture : " + strcutName);
                     }
                 } else if (qname.equals("structure")) {
-					String structureName = childElement.getAttributeValue(RFCConstants.NAME_Q);
-					JCoStructure jcoStructureInner = jcoStrcture.getStructure(structureName);
+                    String structureName = childElement.getAttributeValue(RFCConstants.NAME_Q);
+                    JCoStructure jcoStructureInner = jcoStrcture.getStructure(structureName);
 
-					if (jcoStructureInner == null) {
-						throw new AxisFault("Invalid configuration! The structure : " + structureName + ""
-								+ " did not find the the strcture : " + strcutName);
-					}
+                    if (jcoStructureInner == null) {
+                        throw new AxisFault("Invalid configuration! The structure : " + structureName + ""
+                                            + " did not find the the strcture : " + strcutName);
+                    }
 
-					processStructure(childElement, jcoStructureInner, structureName);
-				} else if (qname.equals("table")) {
-					String name = childElement.getAttributeValue(RFCConstants.NAME_Q);
-					JCoTable jcoTableInner = jcoStrcture.getTable(name);
-					processTable(childElement, jcoTableInner);
-				} else {
+                    processStructure(childElement, jcoStructureInner, structureName);
+                } else if (qname.equals("table")) {
+                    String name = childElement.getAttributeValue(RFCConstants.NAME_Q);
+                    JCoTable jcoTableInner = jcoStrcture.getTable(name);
+                    processTable(childElement, jcoTableInner);
+                } else {
                     log.warn("Invalid meta data type element found : " + qname + " .This meta data " +
-                            "type will be ignored");
+                             "type will be ignored");
                 }
             }
         } else {
             log.error("Didn't find the specified structure : " + strcutName + " on the RFC" +
-                    " repository. This structure will be ignored");
+                      " repository. This structure will be ignored");
         }
     }
 
-	private static void processStructure(OMElement element, JCoStructure jcoStrcture, String strcutName)
-			throws AxisFault {
-		if (jcoStrcture != null) {
-			Iterator itr = element.getChildElements();
-			boolean isRecordFound = false;
-			while (itr.hasNext()) {
-				OMElement childElement = (OMElement) itr.next();
-				String qname = childElement.getQName().toString();
-				if (qname.equals("field")) {
-					String fieldName = childElement.getAttributeValue(RFCConstants.NAME_Q);
-					String fieldValue = childElement.getText();
-					for (JCoField field : jcoStrcture) {
-						if (fieldName != null && fieldName.equals(field.getName())) {
-							isRecordFound = true;
-							field.setValue(fieldValue); // TODO - may be we need to check for null ?
-							break;
-						}
-					}
-					if (!isRecordFound) {
-						throw new AxisFault("Invalid configuration! The field : " + fieldName + ""
-								+ " did not find the the strcture : " + strcutName);
-					}
-				} else if (qname.equals("structure")) {
-					String structureName = childElement.getAttributeValue(RFCConstants.NAME_Q);
-					JCoStructure jcoStructureInner = jcoStrcture.getStructure(structureName);
+    private static void processStructure(OMElement element, JCoStructure jcoStrcture, String strcutName)
+            throws AxisFault {
+        if (jcoStrcture != null) {
+            Iterator itr = element.getChildElements();
+            boolean isRecordFound = false;
+            while (itr.hasNext()) {
+                OMElement childElement = (OMElement) itr.next();
+                String qname = childElement.getQName().toString();
+                if (qname.equals("field")) {
+                    String fieldName = childElement.getAttributeValue(RFCConstants.NAME_Q);
+                    String fieldValue = childElement.getText();
+                    for (JCoField field : jcoStrcture) {
+                        if (fieldName != null && fieldName.equals(field.getName())) {
+                            isRecordFound = true;
+                            field.setValue(fieldValue); // TODO - may be we need to check for null ?
+                            break;
+                        }
+                    }
+                    if (!isRecordFound) {
+                        throw new AxisFault("Invalid configuration! The field : " + fieldName + ""
+                                            + " did not find the the strcture : " + strcutName);
+                    }
+                } else if (qname.equals("structure")) {
+                    String structureName = childElement.getAttributeValue(RFCConstants.NAME_Q);
+                    JCoStructure jcoStructureInner = jcoStrcture.getStructure(structureName);
 
-					if (jcoStructureInner == null) {
-						throw new AxisFault("Invalid configuration! The structure : " + structureName + ""
-								+ " did not find the the strcture : " + strcutName);
-					}
+                    if (jcoStructureInner == null) {
+                        throw new AxisFault("Invalid configuration! The structure : " + structureName + ""
+                                            + " did not find the the strcture : " + strcutName);
+                    }
 
-					processStructure(childElement, jcoStructureInner, structureName);
-				} else if (qname.equals("table")) {
-					String tableName = childElement.getAttributeValue(RFCConstants.NAME_Q);
-					JCoTable jcoTableInner = jcoStrcture.getTable(tableName);
+                    processStructure(childElement, jcoStructureInner, structureName);
+                } else if (qname.equals("table")) {
+                    String tableName = childElement.getAttributeValue(RFCConstants.NAME_Q);
+                    JCoTable jcoTableInner = jcoStrcture.getTable(tableName);
 
-					if (jcoTableInner == null) {
-						throw new AxisFault("Invalid configuration! The table : " + tableName + ""
-								+ " did not find the the strcture : " + strcutName);
-					}
+                    if (jcoTableInner == null) {
+                        throw new AxisFault("Invalid configuration! The table : " + tableName + ""
+                                            + " did not find the the strcture : " + strcutName);
+                    }
 
-					processTable(childElement, jcoTableInner);
-				} else {
-					log.warn("Invalid meta data type element found : " + qname + " .This meta data "
-							+ "type will be ignored");
-				}
-			}
-		} else {
-			log.error("Didn't find the specified structure : " + strcutName + " on the RFC"
-					+ " repository. This structure will be ignored");
-		}
-	}
+                    processTable(childElement, jcoTableInner);
+                } else {
+                    log.warn("Invalid meta data type element found : " + qname + " .This meta data "
+                             + "type will be ignored");
+                }
+            }
+        } else {
+            log.error("Didn't find the specified structure : " + strcutName + " on the RFC"
+                      + " repository. This structure will be ignored");
+        }
+    }
 
-	private static void processTable(OMElement element, JCoTable jconTable) 
-			throws AxisFault{
-		JCoTable inputTable = jconTable;
-		Iterator itr = element.getChildElements();
-		while (itr.hasNext()) {
-			OMElement childElement = (OMElement) itr.next();
-			String qname = childElement.getQName().toString();
-			String id = childElement.getAttributeValue(RFCConstants.ID_Q);
-			if (qname.equals("row")) {
-				processRow(childElement, inputTable, id);
-			}
+    private static void processTable(OMElement element, JCoTable jconTable)
+            throws AxisFault {
+        JCoTable inputTable = jconTable;
+        Iterator itr = element.getChildElements();
+        while (itr.hasNext()) {
+            OMElement childElement = (OMElement) itr.next();
+            String qname = childElement.getQName().toString();
+            String id = childElement.getAttributeValue(RFCConstants.ID_Q);
+            if (qname.equals("row")) {
+                processRow(childElement, inputTable, id);
+            }
 
-		}
-	}
+        }
+    }
 
     private static void processField(OMElement element, JCoFunction function, String fieldName)
-            throws AxisFault{
-        if(fieldName == null){
+            throws AxisFault {
+        if (fieldName == null) {
             throw new AxisFault("A field should have a name!");
         }
         String fieldValue = element.getText();
@@ -245,6 +246,7 @@ public class RFCMetaDataParser {
             function.getImportParameterList().setValue(fieldName, fieldValue);
         }
     }
+
     public static void processFieldValue(String fieldName, String fieldValue, JCoFunction function) throws AxisFault {
         if (fieldValue != null) {
             function.getImportParameterList().setValue(fieldName, fieldValue);
@@ -253,73 +255,73 @@ public class RFCMetaDataParser {
         }
     }
 
-    private static void processTables(OMElement element, JCoFunction function) throws AxisFault{
+    private static void processTables(OMElement element, JCoFunction function) throws AxisFault {
         Iterator itr = element.getChildElements();
-        while (itr.hasNext()){
+        while (itr.hasNext()) {
             OMElement childElement = (OMElement) itr.next();
             String qname = childElement.getQName().toString();
             String tableName = childElement.getAttributeValue(RFCConstants.NAME_Q);
-            if(qname.equals("table")){
+            if (qname.equals("table")) {
                 processTable(childElement, function, tableName);
-            }else{
+            } else {
                 log.warn("Invalid meta data type element found : " + qname + " .This meta data " +
-                            "type will be ignored");
+                         "type will be ignored");
             }
         }
     }
 
-    private static void processTablesParameter(OMElement element, JCoFunction function) throws AxisFault{
+    private static void processTablesParameter(OMElement element, JCoFunction function) throws AxisFault {
         Iterator itr = element.getChildElements();
-        while (itr.hasNext()){
+        while (itr.hasNext()) {
             OMElement childElement = (OMElement) itr.next();
             String qname = childElement.getQName().toString();
             String tableName = childElement.getAttributeValue(RFCConstants.NAME_Q);
-            if(qname.equals("table")){
+            if (qname.equals("table")) {
                 processTableParameter(childElement, function, tableName);
-            }else{
+            } else {
                 log.warn("Invalid meta data type element found : " + qname + " .This meta data " +
-                            "type will be ignored");
+                         "type will be ignored");
             }
         }
     }
 
     private static void processTable(OMElement element, JCoFunction function, String tableName)
-            throws AxisFault{
+            throws AxisFault {
         JCoTable inputTable = function.getTableParameterList().getTable(tableName);
-        if(inputTable == null){
+        if (inputTable == null) {
             throw new AxisFault("Input table :" + tableName + " does not exist");
         }
         Iterator itr = element.getChildElements();
-        while (itr.hasNext()){
-            OMElement childElement = (OMElement)itr.next();
+        while (itr.hasNext()) {
+            OMElement childElement = (OMElement) itr.next();
             String qname = childElement.getQName().toString();
             String id = childElement.getAttributeValue(RFCConstants.ID_Q);
-            if(qname.equals("row")){
+            if (qname.equals("row")) {
                 processRow(childElement, inputTable, id);
-            }else{
+            } else {
                 log.warn("Invalid meta data type element found : " + qname + " .This meta data " +
-                            "type will be ignored");
+                         "type will be ignored");
             }
 
         }
     }
 
     private static void processTableParameter(OMElement element, JCoFunction function, String tableName)
-            throws AxisFault{
+            throws AxisFault {
         JCoTable inputTable = function.getImportParameterList().getTable(tableName);
-        if(inputTable == null){
+        if (inputTable == null) {
             throw new AxisFault("Input table parameter :" + tableName + " does not exist");
         }
         Iterator itr = element.getChildElements();
-        while (itr.hasNext()){
-            OMElement childElement = (OMElement)itr.next();
+        while (itr.hasNext()) {
+            OMElement childElement = (OMElement) itr.next();
             String qname = childElement.getQName().toString();
             String id = childElement.getAttributeValue(RFCConstants.ID_Q);
-            if(qname.equals("row")){
+            if (qname.equals("row")) {
                 processRow(childElement, inputTable, id);
-            }else{
+            } else {
                 log.warn("Invalid meta data type element found : " + qname + " .This meta data " +
-                            "type will be ignored");
+                         "type will be ignored");
             }
 
         }
@@ -352,18 +354,18 @@ public class RFCMetaDataParser {
             if (qname != null && qname.equals("field")) {
                 processField(childElement, table);
             } else if (qname != null && qname.equals("structure")) {
-				String structureName = childElement.getAttributeValue(RFCConstants.NAME_Q);
-				JCoStructure jcoStrctureInner = table.getStructure(structureName);
-				
-				if (jcoStrctureInner != null) {
-					processStructure(childElement, jcoStrctureInner, structureName);
-				}else {
-	                log.warn("Invalid meta data type element found : " + structureName + " .This meta data " +
-	                        "type will be ignored");					
-				}
-			} else {
+                String structureName = childElement.getAttributeValue(RFCConstants.NAME_Q);
+                JCoStructure jcoStrctureInner = table.getStructure(structureName);
+
+                if (jcoStrctureInner != null) {
+                    processStructure(childElement, jcoStrctureInner, structureName);
+                } else {
+                    log.warn("Invalid meta data type element found : " + structureName + " .This meta data " +
+                             "type will be ignored");
+                }
+            } else {
                 log.warn("Invalid meta data type element found : " + qname + " .This meta data " +
-                        "type will be ignored");
+                         "type will be ignored");
             }
         }
     }
