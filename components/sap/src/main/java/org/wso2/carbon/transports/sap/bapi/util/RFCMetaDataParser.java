@@ -141,7 +141,21 @@ public class RFCMetaDataParser {
                         throw new AxisFault("Invalid configuration! The field : "+ fieldName + "" +
                                 " did not find the the strcture : " + strcutName);
                     }
-                } else {
+                } else if (qname.equals("structure")) {
+					String structureName = childElement.getAttributeValue(RFCConstants.NAME_Q);
+					JCoStructure jcoStructureInner = jcoStrcture.getStructure(structureName);
+
+					if (jcoStructureInner == null) {
+						throw new AxisFault("Invalid configuration! The structure : " + structureName + ""
+								+ " did not find the the strcture : " + strcutName);
+					}
+
+					processStructure(childElement, jcoStructureInner, structureName);
+				} else if (qname.equals("table")) {
+					String name = childElement.getAttributeValue(RFCConstants.NAME_Q);
+					JCoTable jcoTableInner = jcoStrcture.getTable(name);
+					processTable(childElement, jcoTableInner);
+				} else {
                     log.warn("Invalid meta data type element found : " + qname + " .This meta data " +
                             "type will be ignored");
                 }
@@ -151,6 +165,74 @@ public class RFCMetaDataParser {
                     " repository. This structure will be ignored");
         }
     }
+
+	private static void processStructure(OMElement element, JCoStructure jcoStrcture, String strcutName)
+			throws AxisFault {
+		if (jcoStrcture != null) {
+			Iterator itr = element.getChildElements();
+			boolean isRecordFound = false;
+			while (itr.hasNext()) {
+				OMElement childElement = (OMElement) itr.next();
+				String qname = childElement.getQName().toString();
+				if (qname.equals("field")) {
+					String fieldName = childElement.getAttributeValue(RFCConstants.NAME_Q);
+					String fieldValue = childElement.getText();
+					for (JCoField field : jcoStrcture) {
+						if (fieldName != null && fieldName.equals(field.getName())) {
+							isRecordFound = true;
+							field.setValue(fieldValue); // TODO - may be we need to check for null ?
+							break;
+						}
+					}
+					if (!isRecordFound) {
+						throw new AxisFault("Invalid configuration! The field : " + fieldName + ""
+								+ " did not find the the strcture : " + strcutName);
+					}
+				} else if (qname.equals("structure")) {
+					String structureName = childElement.getAttributeValue(RFCConstants.NAME_Q);
+					JCoStructure jcoStructureInner = jcoStrcture.getStructure(structureName);
+
+					if (jcoStructureInner == null) {
+						throw new AxisFault("Invalid configuration! The structure : " + structureName + ""
+								+ " did not find the the strcture : " + strcutName);
+					}
+
+					processStructure(childElement, jcoStructureInner, structureName);
+				} else if (qname.equals("table")) {
+					String tableName = childElement.getAttributeValue(RFCConstants.NAME_Q);
+					JCoTable jcoTableInner = jcoStrcture.getTable(tableName);
+
+					if (jcoTableInner == null) {
+						throw new AxisFault("Invalid configuration! The table : " + tableName + ""
+								+ " did not find the the strcture : " + strcutName);
+					}
+
+					processTable(childElement, jcoTableInner);
+				} else {
+					log.warn("Invalid meta data type element found : " + qname + " .This meta data "
+							+ "type will be ignored");
+				}
+			}
+		} else {
+			log.error("Didn't find the specified structure : " + strcutName + " on the RFC"
+					+ " repository. This structure will be ignored");
+		}
+	}
+
+	private static void processTable(OMElement element, JCoTable jconTable) 
+			throws AxisFault{
+		JCoTable inputTable = jconTable;
+		Iterator itr = element.getChildElements();
+		while (itr.hasNext()) {
+			OMElement childElement = (OMElement) itr.next();
+			String qname = childElement.getQName().toString();
+			String id = childElement.getAttributeValue(RFCConstants.ID_Q);
+			if (qname.equals("row")) {
+				processRow(childElement, inputTable, id);
+			}
+
+		}
+	}
 
     private static void processField(OMElement element, JCoFunction function, String fieldName)
             throws AxisFault{
@@ -269,7 +351,17 @@ public class RFCMetaDataParser {
             String qname = childElement.getQName().toString();
             if (qname != null && qname.equals("field")) {
                 processField(childElement, table);
-            } else {
+            } else if (qname != null && qname.equals("structure")) {
+				String structureName = childElement.getAttributeValue(RFCConstants.NAME_Q);
+				JCoStructure jcoStrctureInner = table.getStructure(structureName);
+				
+				if (jcoStrctureInner != null) {
+					processStructure(childElement, jcoStrctureInner, structureName);
+				}else {
+	                log.warn("Invalid meta data type element found : " + structureName + " .This meta data " +
+	                        "type will be ignored");					
+				}
+			} else {
                 log.warn("Invalid meta data type element found : " + qname + " .This meta data " +
                         "type will be ignored");
             }
