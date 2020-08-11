@@ -391,7 +391,13 @@ public class SAPTransportSender extends AbstractTransportSender {
         // be sent without being handled and thrown as an AxisFault
         if (function.getExportParameterList() != null) {
             JCoStructure returnStructure;
-            returnStructure = function.getExportParameterList().getStructure("RETURN");
+            try {
+                returnStructure = function.getExportParameterList().getStructure("RETURN");
+            } catch (JCoRuntimeException e) {
+                if (!(e.getKey().equals("JCO_ERROR_FIELD_NOT_FOUND"))) {
+                    throw e;
+                }
+            }
 
             if (returnStructure != null) {
                 String type = returnStructure.getString("TYPE");
