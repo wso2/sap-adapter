@@ -390,7 +390,7 @@ public class SAPTransportSender extends AbstractTransportSender {
         //If property "sap.escape.error.handling" is defined and is true, the original SAP exceptions will
         // be sent without being handled and thrown as an AxisFault
         if (function.getExportParameterList() != null) {
-            JCoStructure returnStructure;
+            JCoStructure returnStructure = null;
             try {
                 returnStructure = function.getExportParameterList().getStructure("RETURN");
             } catch (JCoRuntimeException e) {
