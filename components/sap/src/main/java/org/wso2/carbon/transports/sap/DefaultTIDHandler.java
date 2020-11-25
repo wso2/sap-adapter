@@ -33,19 +33,23 @@ public class DefaultTIDHandler implements JCoServerTIDHandler {
     private static final Log log = LogFactory.getLog(DefaultTIDHandler.class);
 
     public boolean checkTID(JCoServerContext jCoServerContext, String s) {
-        log.info("Checking TID: " + s);
+        log.info("Checking TID: " + s + ". Destination : " +
+                jCoServerContext.getConnectionAttributes().getDestination());
         return true;
     }
 
     public void commit(JCoServerContext jCoServerContext, String s) {
-        log.info("Committing TID: " + s);
+        log.info("Committing TID: " + s + ". Destination : " +
+                jCoServerContext.getConnectionAttributes().getDestination());
     }
 
     public void confirmTID(JCoServerContext jCoServerContext, String s) {
-        log.info("Confirming TID: " + s);
+        log.info("Confirming TID: " + s + ". Destination : " +
+                jCoServerContext.getConnectionAttributes().getDestination());
     }
 
     public void rollback(JCoServerContext jCoServerContext, String s) {
-        log.info("Rolling back TID: " + s);
+        log.info("Rolling back TID: " + s + ". Destination : " +
+                jCoServerContext.getConnectionAttributes().getDestination());
     }
 }
