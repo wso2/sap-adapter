@@ -34,6 +34,7 @@ import com.sap.conn.jco.server.JCoServerTIDHandler;
 import com.sap.conn.jco.server.JCoServer;
 import com.sap.conn.jco.server.JCoServerState;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -85,6 +86,16 @@ public abstract class SAPEndpoint extends ProtocolEndpoint {
      */
     protected static int serverStopTimeout = 30000;
 
+    /**
+     * Waiting time until a response comes.
+     */
+    private int responseTimeout = 120000;
+
+    /**
+     * Synchronize BAPI Listener
+     */
+    private boolean syncBapiListener = false;
+
     public SAPEndpoint() {
         log = LogFactory.getLog(getClass());
     }
@@ -126,6 +137,18 @@ public abstract class SAPEndpoint extends ProtocolEndpoint {
                 SAPConstants.CUSTOM_EXCEPTION_LISTENER_PARAM);
         customTIDHandler = ParamUtils.getOptionalParam(params,
                 SAPConstants.CUSTOM_TID_HANDLER_PARAM);
+        syncBapiListener = SAPConstants.SAP_ENABLED.equals(
+                ParamUtils.getOptionalParam(params, SAPConstants.ENABLE_SYNC_BAPI_LISTENER));
+        String waitForResponseTimeStr = ParamUtils.getOptionalParam(params, SAPConstants.RESPONSE_TIMEOUT);
+        try {
+            if (Objects.nonNull(waitForResponseTimeStr)) {
+                responseTimeout = Integer.parseInt(waitForResponseTimeStr);
+            }
+        } catch (NumberFormatException e) {
+            log.info("Cannot parse the value " + waitForResponseTimeStr + " in " + SAPConstants.RESPONSE_TIMEOUT
+                             + " into an Integer. Hence, using the default value " + responseTimeout + " for "
+                             + SAPConstants.RESPONSE_TIMEOUT);
+        }
         return true;
     }
 
@@ -209,6 +232,18 @@ public abstract class SAPEndpoint extends ProtocolEndpoint {
         }
     }
 
+    /**
+     * Checks if the BAPI listener is set to synchronous mode.
+     * @return true if the synchronous BAPI listener is enabled.
+     */
+    public boolean isSyncBapiListener() {
+        return syncBapiListener;
+    }
+
     public abstract void startEndpoint(WorkerPool workerPool) throws AxisFault;
     public abstract void stopEndpoint();
+
+    public int getResponseTimeout() {
+        return responseTimeout;
+    }
 }

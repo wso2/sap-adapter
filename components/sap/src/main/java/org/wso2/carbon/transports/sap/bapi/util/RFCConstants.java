@@ -33,4 +33,16 @@ public class RFCConstants {
      * id in rfc configuation
      */
     public static final QName ID_Q = new QName("id");
+    /**
+     * structure in payload
+     */
+    public static final String STRUCTURE = "structure";
+    /**
+     * table in payload
+     */
+    public static final String TABLE = "table";
+    /**
+     * field in payload
+     */
+    public static final String FIELD = "field";
 }

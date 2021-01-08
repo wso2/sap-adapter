@@ -28,6 +28,7 @@ import com.sap.conn.jco.ext.Environment;
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.soap.SOAPEnvelope;
 import org.apache.axis2.AxisFault;
+import org.apache.axis2.Constants;
 import org.apache.axis2.context.ConfigurationContext;
 import org.apache.axis2.context.MessageContext;
 import org.apache.axis2.description.OutInAxisOperation;
@@ -38,6 +39,7 @@ import org.apache.axis2.transport.OutTransportInfo;
 import org.apache.axis2.transport.TransportUtils;
 import org.apache.axis2.transport.base.AbstractTransportSender;
 import org.apache.axis2.util.MessageContextBuilder;
+import org.wso2.carbon.transports.sap.bapi.SAPOutTransportInfo;
 import org.wso2.carbon.transports.sap.bapi.util.RFCConstants;
 import org.wso2.carbon.transports.sap.bapi.util.RFCMetaDataParser;
 import org.wso2.carbon.transports.sap.idoc.DefaultIDocXMLMapper;
@@ -166,131 +168,57 @@ public class SAPTransportSender extends AbstractTransportSender {
     public void sendMessage(MessageContext messageContext, String targetEPR,
                             OutTransportInfo outTransportInfo) throws AxisFault {
 
-        if (targetEPR == null) {
-            throw new AxisFault("Cannot send an IDoc without a target SAP EPR");
-        }
-
-        try {
-            URI uri = new URI(targetEPR);
-            if (log.isDebugEnabled()) {
-                log.debug("Started sending message to uri=" + uri);
+        if (!messageContext.isServerSide()) {
+            if (targetEPR == null) {
+                throw new AxisFault("Cannot send an IDoc without a target SAP EPR");
             }
-            String destName = uri.getPath().substring(1);
-            JCoDestination destination = JCoDestinationManager.getDestination(destName);
-            if (log.isDebugEnabled()) {
-                log.debug("Retrieved destination: " + destination.getDestinationID());
-            }
-            if (uri.getScheme().equals(SAPConstants.SAP_IDOC_PROTOCOL_NAME)) {
-                IDocRepository iDocRepository = JCoIDoc.getIDocRepository(destination);
-                String tid = destination.createTID();
-                if (log.isDebugEnabled()) {
-                    log.debug("Created transaction ID: " + tid);
-                }
-                //Set the transaction id as a transport header so that it can be used later.
-                Object headers = messageContext.getProperty(org.apache.axis2.context.MessageContext.TRANSPORT_HEADERS);
-                Map headersMap = (Map) headers;
-                headersMap.put(SAP_TRANSACTION_ID, tid);
 
-                IDocDocumentList iDocList = getIDocs(messageContext, iDocRepository);
-                JCoIDoc.send(iDocList, getIDocVersion(uri), destination, tid);
-                destination.confirmTID(tid);
+            try {
+                URI uri = new URI(targetEPR);
                 if (log.isDebugEnabled()) {
-                    log.debug("Successfully sent Idoc. Destination:" + destination.getDestinationID());
+                    log.debug("Started sending message to uri=" + uri);
                 }
-            } else if (uri.getScheme().equals(SAPConstants.SAP_BAPI_PROTOCOL_NAME)) {
+                String destName = uri.getPath().substring(1);
+                JCoDestination destination = JCoDestinationManager.getDestination(destName);
                 if (log.isDebugEnabled()) {
-                    log.debug("Invoking BAPI endpoint");
+                    log.debug("Retrieved destination: " + destination.getDestinationID());
                 }
-                String escapeErrorHandling = (String) messageContext.getProperty(SAP_ESCAPE_ERROR_HANDLING);
-                boolean isLogon = isLogon(messageContext);
-                if (log.isDebugEnabled()) {
-                    log.debug("Transaction property :" + messageContext
-                            .getProperty(SAPConstants.TRANSACTION_COMMIT_PARAM));
-                    log.debug("Logon property :" + messageContext.getProperty(SAPConstants.TRANSACTION_SAP_LOGON));
-                }
-                String rfcFunctionName = null;
-                try {
-                    OMElement payLoad,body;
-                    body = messageContext.getEnvelope().getBody();
-                    payLoad = body.getFirstChildWithName(new QName(RFCConstants.BAPIRFC));
+                if (uri.getScheme().equals(SAPConstants.SAP_IDOC_PROTOCOL_NAME)) {
+                    IDocRepository iDocRepository = JCoIDoc.getIDocRepository(destination);
+                    String tid = destination.createTID();
                     if (log.isDebugEnabled()) {
-                        log.debug("Received RFC/Meta DATA: " + payLoad);
+                        log.debug("Created transaction ID: " + tid);
                     }
-                    rfcFunctionName = RFCMetaDataParser.getBAPIRFCFunctionName(payLoad);
-                    if (isTransaction(messageContext) || isLogon) {
-                        if (log.isDebugEnabled()) {
-                            log.debug("Beginning Transaction for function: " + rfcFunctionName);
-                        }
-                        JCoContext.begin(destination);
-                        if (log.isDebugEnabled()){
-                            log.debug("Transaction begun. Function: " + rfcFunctionName);
-                        }
-                    }
-                    if (isLogon) {
-                        logon(messageContext, destination, escapeErrorHandling);
-                    }
+                    //Set the transaction id as a transport header so that it can be used later.
+                    Object headers = messageContext.getProperty(MessageContext.TRANSPORT_HEADERS);
+                    Map headersMap = (Map) headers;
+                    headersMap.put(SAP_TRANSACTION_ID, tid);
+
+                    IDocDocumentList iDocList = getIDocs(messageContext, iDocRepository);
+                    JCoIDoc.send(iDocList, getIDocVersion(uri), destination, tid);
+                    destination.confirmTID(tid);
                     if (log.isDebugEnabled()) {
-                        log.debug("Looking up the BAPI/RFC function: " + rfcFunctionName
-                                  + ". In the meta data repository");
+                        log.debug("Successfully sent Idoc. Destination:" + destination.getDestinationID());
                     }
-
-                    JCoFunction function = getRFCfunction(destination, rfcFunctionName);
-                    RFCMetaDataParser.processMetaDataDocument(payLoad, function);
-                    String bapiResponse = evaluateRFCfunction(function, destination, escapeErrorHandling);
-
-                    if (isTransaction(messageContext)) {
-                        //commit the transaction
-                        JCoFunction commitFunction = getRFCfunction(destination, SAPConstants.BAPI_TRANSACTION_COMMIT);
-
-                        Object headers = messageContext.getProperty(org.apache.axis2.context.
-                                                                            MessageContext.TRANSPORT_HEADERS);
-                        Map headersMap = (Map) headers;
-                        String waitValue = (String) headersMap.get(SAP_WAIT);
-                        if (waitValue != null && !waitValue.isEmpty()) {
-                            RFCMetaDataParser.processFieldValue(FIELD_NAME_WAIT, waitValue, commitFunction);
-                        }
-
-                        String commitResponse = evaluateRFCfunction(commitFunction, destination, escapeErrorHandling);
-
-                        // create an aggregated response containing both the BAPI response and the commit response
-                        StringBuilder sb = new StringBuilder();
-
-                        sb.append(AGGREGATED_RESPONSE_OPENING_TAG);
-                        sb.append(bapiResponse).append(commitResponse);
-                        sb.append(AGGREGATED_RESPONSE_CLOSING_TAG);
-
-                        bapiResponse = sb.toString();
-                        log.info("Committed transaction.");
-                    }
-
-                    processResponse(messageContext, bapiResponse);
-                } catch (Exception e) {
-                    log.error("Error while sending request", e);
-                    if (isTransaction(messageContext)) {
-                        //Rollback transaction if something goes wrong during the transaction
-                        JCoFunction rollbackFunction = getRFCfunction(destination,
-                                SAPConstants.BAPI_TRANSACTION_ROLLBACK);
-                        evaluateRFCfunction(rollbackFunction, destination, escapeErrorHandling);
-                        log.warn("Rolled-back transaction. Function: " + rfcFunctionName);
-                    }
-                    sendFault(messageContext, e , SAP_TRANSPORT_ERROR);
-                } finally {
-                    if (isTransaction(messageContext) || isLogon) {
-                        //end transaction
-                        JCoContext.end(destination);
-                        if (log.isDebugEnabled()){
-                            log.debug("Ended transaction. Function: " + rfcFunctionName);
-                        }
-                    }
+                } else if (uri.getScheme().equals(SAPConstants.SAP_BAPI_PROTOCOL_NAME)) {
+                    sendBapiRequest(messageContext, destination);
+                } else {
+                    handleException("Invalid protocol name : " + uri.getScheme() + " in SAP URL");
                 }
-
-            } else {
-                handleException("Invalid protocol name : " + uri.getScheme() + " in SAP URL");
+            } catch (Exception e) {
+                log.error("Error while sending request to the EPR" + targetEPR, e);
+                sendFault(messageContext,e, SAP_DESTINATION_ERROR);
+                handleException("Error while sending request to the EPR : " + targetEPR, e);
             }
-        } catch (Exception e) {
-            log.error("Error while sending request to the EPR" + targetEPR, e);
-            sendFault(messageContext,e, SAP_DESTINATION_ERROR);
-            handleException("Error while sending request to the EPR : " + targetEPR, e);
+        } else {
+            log.debug("Handling response");
+            if (messageContext.getProperty(Constants.OUT_TRANSPORT_INFO) instanceof SAPOutTransportInfo) {
+                SAPOutTransportInfo outTransportInfoValue = (SAPOutTransportInfo) messageContext
+                        .getProperty(Constants.OUT_TRANSPORT_INFO);
+                if (outTransportInfoValue.getProtocol().equals(SAPConstants.SAP_BAPI_PROTOCOL_NAME)) {
+                    populateBapiReponse(messageContext, outTransportInfoValue);
+                }
+            }
         }
     }
 
@@ -448,7 +376,7 @@ public class SAPTransportSender extends AbstractTransportSender {
     private void processResponse(MessageContext msgContext, String payLoad)
             throws AxisFault {
         if (log.isDebugEnabled()) {
-            log.debug("Response received");
+            log.debug("Response received: " + payLoad);
         }
         if (!(msgContext.getAxisOperation() instanceof OutInAxisOperation)) {
             return;
@@ -488,6 +416,108 @@ public class SAPTransportSender extends AbstractTransportSender {
             }
         } catch (AxisFault axisFault) {
             log.fatal("Cloud not create the fault message.", axisFault);
+        }
+    }
+
+    private void sendBapiRequest(MessageContext messageContext, JCoDestination destination) throws AxisFault,
+            JCoException {
+
+        if (log.isDebugEnabled()) {
+            log.debug("Invoking BAPI endpoint");
+        }
+        String escapeErrorHandling = (String) messageContext.getProperty(SAP_ESCAPE_ERROR_HANDLING);
+        boolean isLogon = isLogon(messageContext);
+        if (log.isDebugEnabled()) {
+            log.debug("Transaction property :" + messageContext
+                    .getProperty(SAPConstants.TRANSACTION_COMMIT_PARAM));
+            log.debug("Logon property :" + messageContext.getProperty(SAPConstants.TRANSACTION_SAP_LOGON));
+        }
+        String rfcFunctionName = null;
+        try {
+            OMElement payLoad, body;
+            body = messageContext.getEnvelope().getBody();
+            payLoad = body.getFirstChildWithName(new QName(RFCConstants.BAPIRFC));
+            if (log.isDebugEnabled()) {
+                log.debug("Received RFC/Meta DATA: " + payLoad);
+            }
+            rfcFunctionName = RFCMetaDataParser.getBAPIRFCFunctionName(payLoad);
+            if (isTransaction(messageContext) || isLogon) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Beginning Transaction for function: " + rfcFunctionName);
+                }
+                JCoContext.begin(destination);
+                if (log.isDebugEnabled()) {
+                    log.debug("Transaction begun. Function: " + rfcFunctionName);
+                }
+            }
+            if (isLogon) {
+                logon(messageContext, destination, escapeErrorHandling);
+            }
+            if (log.isDebugEnabled()) {
+                log.debug("Looking up the BAPI/RFC function: " + rfcFunctionName
+                        + ". In the meta data repository");
+            }
+
+            JCoFunction function = getRFCfunction(destination, rfcFunctionName);
+            RFCMetaDataParser.processMetaDataDocument(payLoad, function);
+            String bapiResponse = evaluateRFCfunction(function, destination, escapeErrorHandling);
+
+            if (isTransaction(messageContext)) {
+                //commit the transaction
+                JCoFunction commitFunction = getRFCfunction(destination, SAPConstants.BAPI_TRANSACTION_COMMIT);
+                Object headers = messageContext.getProperty(org.apache.axis2.context.MessageContext.TRANSPORT_HEADERS);
+                Map headersMap = (Map) headers;
+                String waitValue = (String) headersMap.get(SAP_WAIT);
+                if (waitValue != null && !waitValue.isEmpty()) {
+                    RFCMetaDataParser.processFieldValue(FIELD_NAME_WAIT, waitValue, commitFunction);
+                }
+                String commitResponse = evaluateRFCfunction(commitFunction, destination, escapeErrorHandling);
+                // create an aggregated response containing both the BAPI response and the commit response
+                StringBuilder sb = new StringBuilder();
+
+                sb.append(AGGREGATED_RESPONSE_OPENING_TAG);
+                sb.append(bapiResponse).append(commitResponse);
+                sb.append(AGGREGATED_RESPONSE_CLOSING_TAG);
+
+                bapiResponse = sb.toString();
+                if (log.isDebugEnabled()) {
+                    log.debug("Committed transaction. Function: " + rfcFunctionName);
+                }
+                processResponse(messageContext, bapiResponse);
+            } else {
+                //this is not transaction just calling the BAPI function and get the result
+                JCoFunction function = getRFCfunction(destination, rfcFunctionName);
+                RFCMetaDataParser.processMetaDataDocument(payLoad, function);
+                responseXML = evaluateRFCfunction(function, destination, escapeErrorHandling);
+            }
+            processResponse(messageContext, responseXML);
+        } catch (Exception e) {
+            log.error("Error while sending request", e);
+            if (isTransaction(messageContext)) {
+                //Rollback transaction if something goes wrong during the transaction
+                JCoFunction rollbackFunction = getRFCfunction(destination,
+                        SAPConstants.BAPI_TRANSACTION_ROLLBACK);
+                evaluateRFCfunction(rollbackFunction, destination, escapeErrorHandling);
+                log.warn("Rolled-back transaction. Function: " + rfcFunctionName);
+            }
+            sendFault(messageContext, e, SAP_TRANSPORT_ERROR);
+        } finally {
+            if (isTransaction(messageContext) || isLogon) {
+                //end transaction
+                JCoContext.end(destination);
+                if (log.isDebugEnabled()) {
+                    log.debug("Ended transaction. Function: " + rfcFunctionName);
+                }
+            }
+        }
+    }
+
+    private void populateBapiReponse(MessageContext messageContext, SAPOutTransportInfo outTransportInfo) {
+
+        synchronized (outTransportInfo) {
+            log.debug("Populating response to outTransportInfo");
+            outTransportInfo.setPayload(messageContext.getEnvelope().getBody());
+            outTransportInfo.notify();
         }
     }
 }

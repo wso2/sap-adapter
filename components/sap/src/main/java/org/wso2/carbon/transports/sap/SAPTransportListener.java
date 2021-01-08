@@ -19,13 +19,11 @@
 
 package org.wso2.carbon.transports.sap;
 
-import org.apache.axis2.transport.base.AbstractTransportListenerEx;
-import org.apache.axis2.AxisFault;
-import org.apache.axis2.description.TransportInDescription;
-import org.apache.axis2.context.ConfigurationContext;
-import org.wso2.carbon.transports.sap.idoc.IDocEndpoint;
-import org.wso2.carbon.transports.sap.bapi.BAPIEndpoint;
 import com.sap.conn.jco.ext.Environment;
+import org.apache.axis2.AxisFault;
+import org.apache.axis2.transport.base.AbstractTransportListenerEx;
+import org.wso2.carbon.transports.sap.bapi.BAPIEndpoint;
+import org.wso2.carbon.transports.sap.idoc.IDocEndpoint;
 
 /**
  * <code>SAPTransportListener </code> provides the transport listener implementation for SAP adapter

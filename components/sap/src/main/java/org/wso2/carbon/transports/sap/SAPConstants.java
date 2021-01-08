@@ -35,7 +35,9 @@ public class SAPConstants {
     /* Transport listener parameters */
     public static final String SERVER_NAME_PARAM = "transport.sap.serverName";
     public static final String ENABLE_ERROR_LISTENER_PARAM = "transport.sap.enableErrorListener";
-    public static final String ENABLE_TID_HANDLER_PARAM = "transport.sap.enableTIDHandler"; 
+    public static final String ENABLE_TID_HANDLER_PARAM = "transport.sap.enableTIDHandler";
+    public static final String ENABLE_SYNC_BAPI_LISTENER = "transport.sap.enableSyncBapiListener";
+    public static final String RESPONSE_TIMEOUT = "transport.sap.responseTimeout";
     public static final String CONNECTIONS_PARAM = "transport.sap.connections";
     public static final String CUSTOM_ERROR_LISTENER_PARAM = "transport.sap.customErrorListener";
     public static final String CUSTOM_EXCEPTION_LISTENER_PARAM = "transport.sap.customExceptionListener";
