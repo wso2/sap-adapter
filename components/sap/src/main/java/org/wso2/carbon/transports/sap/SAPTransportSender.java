@@ -328,10 +328,10 @@ public class SAPTransportSender extends AbstractTransportSender {
             }
 
             if (returnStructure != null) {
-                String type = returnStructure.getString("TYPE");
                 String returnStructureStr = returnStructure.toXML();
 
                 if ("false".equals(escapeErrorHandling)) {
+                    String type = returnStructure.getString("TYPE");
                     if (!("S".equals(type) || "I".equals(type) || "W".equals(type) || "".equals(type))) {
                         throw new AxisFault("Erroneous response while invoking the function: " + function.getName() +
                                             ", of type" + type + " response: " + returnStructureStr);
