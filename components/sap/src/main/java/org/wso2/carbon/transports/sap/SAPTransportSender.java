@@ -483,14 +483,9 @@ public class SAPTransportSender extends AbstractTransportSender {
                 if (log.isDebugEnabled()) {
                     log.debug("Committed transaction. Function: " + rfcFunctionName);
                 }
-                processResponse(messageContext, bapiResponse);
-            } else {
-                //this is not transaction just calling the BAPI function and get the result
-                JCoFunction function = getRFCfunction(destination, rfcFunctionName);
-                RFCMetaDataParser.processMetaDataDocument(payLoad, function);
-                responseXML = evaluateRFCfunction(function, destination, escapeErrorHandling);
+
             }
-            processResponse(messageContext, responseXML);
+            processResponse(messageContext, bapiResponse);
         } catch (Exception e) {
             log.error("Error while sending request", e);
             if (isTransaction(messageContext)) {
