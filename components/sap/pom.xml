@@ -26,7 +26,7 @@
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>org.wso2.carbon.transports.sap</artifactId>
-    <packaging>${packaging.type}</packaging>
+    <packaging>bundle</packaging>
     <name>WSO2 Carbon - SAP transport</name>
     <description>WSO2 Carbon - SAP Adapter</description>
 
@@ -144,3 +144,4 @@
     </dependencies>
 
 </project>
+
