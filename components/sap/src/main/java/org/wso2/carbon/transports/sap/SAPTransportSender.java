@@ -415,7 +415,7 @@ public class SAPTransportSender extends AbstractTransportSender {
                 log.error("Could not create the fault message.", e);
             }
         } catch (AxisFault axisFault) {
-            log.fatal("Cloud not create the fault message.", axisFault);
+            log.fatal("Could not create the fault message.", axisFault);
         }
     }
 
