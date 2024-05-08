@@ -361,7 +361,7 @@ public class SAPTransportSender extends AbstractTransportSender {
                 log.debug("retrieved function: " + function.getName());
             }
         } catch (JCoException e) {
-            throw new AxisFault("RFC function " + function + " Could not found in SAP system", e);
+            throw new AxisFault("RFC function " + function + " could not found in SAP system", e);
         }
         return function;
     }
