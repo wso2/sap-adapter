@@ -17,11 +17,18 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: maven
-    - name: Clone sap-resources Repository
+    - name: Clone sap resources repo
       env:
-        RESOURCE_REPO: ${{ secrets.RESOURCE_REPO }}
-      run: |
-        mkdir sap-resources
-        git clone ${RESOURCE_REPO} sap-resources
+        RESOURCE_REPO: ${{ secrets.WSO2_INTEGRATION_BOT_TOKEN }}
+      uses: actions/checkout@v4
+      with:
+        repository: wso2-enterprise/wso2-sap-resources
+        token: ${{ secrets.WSO2_INTEGRATION_BOT_TOKEN }}
+        path: libs
     - name: Build with Maven
-      run: mvn -Dsap.lib.dir=sap-resources/wso2-sap-resources/resources/lib clean install
+      run: mvn -Dsap.lib.dir=libs/wso2-sap-resources/resources/lib/. clean install
+    - name: Upload test coverage to Codecov
+      uses: codecov/codecov-action@v4.0.1
+      with:
+        flags: unit_tests
+        token: ${{ secrets.CODECOV_TOKEN }}
