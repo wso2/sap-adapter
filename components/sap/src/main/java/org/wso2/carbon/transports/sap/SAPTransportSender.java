@@ -311,7 +311,7 @@ public class SAPTransportSender extends AbstractTransportSender {
                 log.debug("Invoked the RFC function :" + function.getName());
             }
         } catch (JCoException e) {
-            throw new AxisFault("Cloud not execute the RFC function: " + function, e);
+            throw new AxisFault("Could not execute the RFC function: " + function, e);
         }
 
         // there seems to be some error that we need to report: TODO ?
@@ -361,7 +361,7 @@ public class SAPTransportSender extends AbstractTransportSender {
                 log.debug("retrieved function: " + function.getName());
             }
         } catch (JCoException e) {
-            throw new AxisFault("RFC function " + function + " cloud not found in SAP system", e);
+            throw new AxisFault("RFC function " + function + " could not found in SAP system", e);
         }
         return function;
     }
@@ -415,7 +415,7 @@ public class SAPTransportSender extends AbstractTransportSender {
                 log.error("Could not create the fault message.", e);
             }
         } catch (AxisFault axisFault) {
-            log.fatal("Cloud not create the fault message.", axisFault);
+            log.fatal("Could not create the fault message.", axisFault);
         }
     }
 
