@@ -151,7 +151,9 @@ public class Axis2IDocHandler implements JCoIDocHandler {
 
         private void closeStream(Closeable obj) {
             try {
-                obj.close();
+                if(obj != null){
+                    obj.close();
+                }
             } catch (IOException e) {
                 log.error("Error while closing the stream", e);
             }
