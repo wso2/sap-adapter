@@ -29,6 +29,7 @@ import org.apache.axis2.transport.TransportUtils;
 import org.apache.axis2.context.MessageContext;
 import org.apache.axis2.engine.AxisEngine;
 import org.apache.axiom.soap.SOAPEnvelope;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.transports.sap.idoc.IDocEndpoint;
@@ -143,17 +144,9 @@ public class Axis2IDocHandler implements JCoIDocHandler {
             } catch (Exception e) {
                 log.error("Error while processing the IDoc through the Axis engine", e);
             } finally {
-                closeStream(osw);
-                closeStream(baos);
-                closeStream(bais);
-            }
-        }
-
-        private void closeStream(Closeable obj) {
-            try {
-                obj.close();
-            } catch (IOException e) {
-                log.error("Error while closing the stream", e);
+                IOUtils.closeQuietly(osw);
+                IOUtils.closeQuietly(baos);
+                IOUtils.closeQuietly(bais);
             }
         }
     }
