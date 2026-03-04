@@ -24,6 +24,7 @@ import org.apache.axis2.AxisFault;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.math.BigDecimal;
 import java.util.Iterator;
 
 /**
@@ -243,7 +244,20 @@ public class RFCMetaDataParser {
         String fieldValue = element.getText();
         if (fieldValue != null) {
             // TODO-check for avalibility of the field
-            function.getImportParameterList().setValue(fieldName, fieldValue);
+            //check Type of field
+            JCoListMetaData listMetaData = function.getImportParameterList().getListMetaData();
+            String fieldType = listMetaData.getTypeAsString(fieldName);
+            if ("BCD".equals(fieldType)) {
+                BigDecimal bigDecimal = null;
+                try {
+                    bigDecimal = new BigDecimal(fieldValue);
+                } catch (Exception e) {
+                    throw new AxisFault("Invalid numeric value:" + fieldValue);
+                }
+                function.getImportParameterList().setValue(fieldName, bigDecimal);
+            } else {
+                function.getImportParameterList().setValue(fieldName, fieldValue);
+            }
         }
     }
 
@@ -387,7 +401,20 @@ public class RFCMetaDataParser {
             throw new AxisFault("A field should have a name!");
         }
         if (fieldValue != null) {
-            table.setValue(fieldName, fieldValue);
+            //check Type of field
+            JCoRecordMetaData recordMetaData = table.getRecordMetaData();
+            String fieldType = recordMetaData.getTypeAsString(fieldName);
+            if ("BCD".equals(fieldType)) {
+                BigDecimal bigDecimal = null;
+                try {
+                    bigDecimal = new BigDecimal(fieldValue);
+                } catch (Exception e) {
+                    throw new AxisFault("Invalid bigdecimal value:" + fieldValue);
+                }
+                table.setValue(fieldName, bigDecimal);
+            } else {
+                table.setValue(fieldName, fieldValue);
+            }
         }
     }
 }
