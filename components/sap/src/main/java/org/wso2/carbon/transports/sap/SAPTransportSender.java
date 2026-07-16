@@ -407,6 +407,9 @@ public class SAPTransportSender extends AbstractTransportSender {
                     msgContext, e);
             faultContext.setProperty(ERROR_CODE,errorCode);
             faultContext.setProperty("ERROR_MESSAGE",e.getMessage());
+            if (e.getCause() != null && e.getCause().getMessage() != null) {
+                faultContext.setProperty("ERROR_DETAIL", e.getCause().getMessage());
+            }
             faultContext.setProperty("SENDING_FAULT", Boolean.TRUE);
             if (msgContext.getAxisOperation() != null &&
                     msgContext.getAxisOperation().getMessageReceiver() != null) {
